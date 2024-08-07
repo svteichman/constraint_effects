@@ -27,8 +27,8 @@ for (i in 2:45) {
 }
 # analyze times
 rowMeans(times)
-apply(times, 1, max)
-rowSums(times)
+apply(times, 1, max)/60
+rowSums(times)/3600
 # analyze significant results 
 qvals <- apply(pvals[2:45, ], 1, function(x) {qvalue(x)$qvalues})
 sig_cats <- lapply(1:44, function(x) {which(qvals[, x] <= 0.1)})
@@ -46,3 +46,19 @@ cor(plot_df %>% dplyr::select(contains("rank")))
 plot(plot_df %>% dplyr::select(contains("rank")))
 plot_df %>% dplyr::select(contains("rank")) %>%
   arrange(rank100) %>% head(20)
+
+data("wirbel_sample")
+data("wirbel_otu")
+
+# prep data
+wirbel_sample$Group <- factor(wirbel_sample$Group, levels = c("CTR","CRC"))
+ch_study_obs <- which(wirbel_sample$Country %in% c("CHI"))
+
+wirbel_otu_ch <- wirbel_otu[ch_study_obs, ]
+sum(rowSums(wirbel_otu_ch) == 0) # no samples have a count sum of 0 
+sum(colSums(wirbel_otu_ch) == 0) # 87 categories have a count sum of 0
+
+categories_to_rm <- which(colSums(wirbel_otu_ch) == 0)
+wirbel_otu_ch <- wirbel_otu_ch[, -categories_to_rm]
+sum(colSums(wirbel_otu_ch) == 0)
+
