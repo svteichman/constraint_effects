@@ -42,20 +42,20 @@ score_res <- data.frame(pval = rep(NA, J),
 if (batch == 1) {
   for (j in 1:J) {
     start <- proc.time()
-    score_res <- emuFit(formula = ~ Group, 
+    emu_res <- emuFit(formula = ~ Group, 
                         data = wirbel_sample[ch_study_obs, ],
                         Y = wirbel_otu_ch,
                         fitted_model = fit,
                         refit = FALSE,
                         test_kj = data.frame(k = 2, j = j))
     end <- proc.time() - start
-    score_res$pval[j] <- score_res$coef[j, "pval"]
+    score_res$pval[j] <- emu_res$coef[j, "pval"]
     score_res$time[j] <- end[3]
   }
 } else {
   for (j in 1:J) {
     start <- proc.time()
-    score_res <- fastEmuTest(constraint_cats = constraint_set, 
+    emu_res <- fastEmuTest(constraint_cats = constraint_set, 
                              estimate_full_model = FALSE,
                              formula = ~ Group, 
                              data = wirbel_sample[ch_study_obs, ],
@@ -64,7 +64,7 @@ if (batch == 1) {
                              refit = FALSE,
                              test_kj = data.frame(k = 2, j = j))
     end <- proc.time() - start
-    score_res$pval[j] <- score_res$coef[j, "pval"]
+    score_res$pval[j] <- emu_res$coef[1, "pval"]
     score_res$time[j] <- end[3]
   }
 }

@@ -31,10 +31,22 @@ constraint_sets <- readRDS("constraint_effects/results/constraint_sets.rds")
 constraint_set <- constraint_sets[[batch]]
 
 # run estimation 
+constraint_fn <- (function(x) {
+  radEmu:::pseudohuber_center(x[constraint_set], d = .1)
+})
+constraint_grad_fn <- (function(x) {
+  grad <- rep(0, length(x))
+  grad[constraint_set] <-
+    radEmu:::dpseudohuber_center_dx(x[constraint_set], d = .1)
+  return(grad)
+})
 ch_fit <- emuFit(formula = ~ Group, 
                  data = wirbel_sample[ch_study_obs, ],
                  Y = wirbel_otu_ch,
-                 run_score_tests = FALSE) 
+                 run_score_tests = FALSE,
+                 constraint_fn = constraint_fn, 
+                 constraint_grad_fn = constraint_grad_fn,
+                 constraint_param = NA) 
 write_rds(ch_fit$coef, paste0("constraint_effects/results/estimation_results/coef",
                               batch, ".rds"))
 write_rds(ch_fit, paste0("constraint_effects/results/full_model/fit",
