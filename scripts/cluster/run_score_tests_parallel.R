@@ -30,7 +30,6 @@ sum(colSums(wirbel_otu_ch) == 0)
 # get estimation results
 fit <- readRDS("constraint_effects/results/full_model/fit1.rds")
 
-J <- ncol(wirbel_otu_ch)
 score_res <- data.frame(j = batch,
                         pval = NA,
                         time = NA)

@@ -12,10 +12,19 @@ for (i in 1:45) {
 diffs <- sapply(2:45, function(x) {estimates[x, 1] - estimates[1, 1]})
 summary(estimates[1, ])
 mean(abs(estimates[1, ] < 0.15))
-ggplot(data.frame(x = estimates[1,], y = estimates[3,]), aes(x = x, y = y)) + 
+ggplot(data.frame(x = estimates[1,], y = estimates[4,]), aes(x = x, y = y)) + 
   geom_point() + geom_abline(aes(slope = 1, intercept = 0), color = "red") +
   labs(x = "Estimates with full constraint set",
-       y = "Estimates with subset of 30 taxon constraint set")
+       y = "Estimates with subset of 50 taxon constraint set") + 
+  theme_bw()
+ggsave("figures/estimate_med_p50.png", height = 6, width = 6)
+
+constraint_sets <- readRDS("results/constraint_sets.rds")
+summary(estimates[1, ])
+summary(estimates[1, constraint_sets[[2]]])
+summary(estimates[1, constraint_sets[[3]]])
+summary(estimates[1, constraint_sets[[4]]])
+summary(estimates[1, constraint_sets[[5]]])
 
 # load in inference results 
 pvals <- matrix(nrow = 45, ncol = 758)
@@ -54,9 +63,93 @@ cor(plot_df %>% dplyr::select(contains("rank")))
 plot(plot_df %>% dplyr::select(contains("rank")))
 plot_df %>% dplyr::select(contains("rank")) %>%
   arrange(rank_med) %>% head(20)
+ggplot(plot_df, aes(x = p_med, y = p50)) + 
+  geom_point() + geom_abline(aes(slope = 1, intercept = 0), color = "red") +
+  labs(x = "P-values with full constraint set",
+       y = "P-values with subset of 50 taxon constraint set") + 
+  theme_bw()
+ggsave("figures/pval_med_p50.png", height = 6, width = 6)
+plot_df$q_med <- qvals[, 1]
+plot_df$q50 <- qvals[, 4]
+ggplot(plot_df, aes(x = q_med, y = q50)) + 
+  geom_point() + geom_abline(aes(slope = 1, intercept = 0), color = "red") +
+  labs(x = "Q-values with full constraint set",
+       y = "Q-values with subset of 50 taxon constraint set") + 
+  theme_bw() + 
+  xlim(c(0, 0.5)) + 
+  ylim(c(0, 0.5))
+ggsave("figures/qval_med_p50.png", height = 6, width = 6)
 
+pval_mse <- apply(pvals, 1, function(x) {sum((x - pvals[1, ])^2)})
+qval_mse <- apply(qvals, 1, function(x) {sum((x - qvals[1, ])^2)})
+sizes <- c(10, 30, 50, 100)
+plot_df <- data.frame(p_mse = pval_mse[2:45], diff = abs(diffs), 
+                      q_mse = qval_mse[2:45],
+                      type = c(paste0("presence ", sizes),
+                               rep(paste0("random ", sizes), each = 10)),
+                      agg_type = c(rep("presence", 4), rep("random", 40)),
+                      full_time = apply(times[2:45, ], 1, sum))
+plot_df$num_disc_agree <- sapply(2:45, function(x) {sum(sig_cats[[x]] %in% sig_cats[[1]])})
+plot_df$num_disc_disagree <- sapply(2:45, function(x) {sum(!(sig_cats[[x]] %in% sig_cats[[1]]))})
+plot_df$type <- factor(plot_df$type, levels = c(paste0("presence ", sizes),
+                                                paste0("random ", sizes)))
+ggplot(plot_df, aes(x = diff, y = p_mse, color = type, shape = agg_type)) + 
+  geom_point() + 
+  scale_shape_manual(values = c(8, 19)) + 
+  labs(x = "Absolute difference in estimates",
+       y = "MSE across p-values",
+       color = "Constraint",
+       shape = "Constraint Type") + 
+  theme_bw()
+ggsave("figures/p_mse_by_est_diff.png", height = 6, width = 6)
+ggplot(plot_df, aes(x = diff, y = q_mse, color = type, shape = agg_type)) + 
+  geom_point() + 
+  scale_shape_manual(values = c(8, 19)) + 
+  labs(x = "Absolute difference in estimates",
+       y = "MSE across q-values",
+       color = "Constraint",
+       shape = "Constraint Type") + 
+  theme_bw()
+ggsave("figures/q_mse_by_est_diff.png", height = 6, width = 6)
+ggplot(plot_df, aes(x = diff, y = full_time, color = type, shape = agg_type)) + 
+  geom_point() + 
+  scale_shape_manual(values = c(8, 19)) + 
+  labs(x = "Absolute difference in estimates",
+       y = "Time to run all tests (seconds)",
+       color = "Constraint",
+       shape = "Constraint Type") + 
+  theme_bw()
+ggsave("figures/full_time_by_est_diff.png", height = 6, width = 6)
+ggplot(plot_df, aes(x = num_disc_agree, y = num_disc_disagree, color = type, shape = agg_type)) + 
+  geom_point() + 
+  scale_shape_manual(values = c(8, 19)) + 
+  labs(x = "Number discoveries also in pseudo-median discovery set",
+       y = "Number discoveries not in pseudo-median discovery set",
+       color = "Constraint",
+       shape = "Constraint Type") + 
+  theme_bw()
+ggsave("figures/discoveries.png", height = 6, width = 6)
 
+# radEmu with constraint 4
+pvals_s4 <- rep(NA, 758)
+times_s4 <- rep(NA, 758)
+for (j in 1:758) {
+  emuScore <- readRDS(paste0("results/score_test_results/s4_score_res", j, ".rds"))
+  pvals_s4[j] <- emuScore$pval
+  times_s4[j] <- emuScore$time
+}
+median(times_s4)
+median(times[4, ])
+median(times_s4) / median(times[4, ])
+max(times_s4)
+max(times[4, ])
+max(times_s4) / max(times[4, ])
+sum(times_s4)
+sum(times[4, ])
+sum(times_s4) / sum(times[4, ])
+cor(pvals[4, ], pvals_s4)
 
+# data
 data("wirbel_sample")
 data("wirbel_otu")
 
