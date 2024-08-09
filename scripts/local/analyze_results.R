@@ -2,14 +2,16 @@ library(tidyverse)
 library(qvalue)
 
 # load in estimation results 
-estimates <- matrix(nrow = 45, ncol = 758)
+estimates <- matrix(nrow = 46, ncol = 758)
 for (i in 1:45) {
   emuEst <- readRDS(paste0("results/estimation_results/coef", i, ".rds"))
   estimates[i, ] <- emuEst$estimate
 }
+emuEst <- readRDS("results/estimation_results/coef_mean.rds")
+estimates[46, ] <- emuEst$estimate
 
 # calculate differences 
-diffs <- sapply(2:45, function(x) {estimates[x, 1] - estimates[1, 1]})
+diffs <- sapply(2:46, function(x) {estimates[x, 1] - estimates[1, 1]})
 summary(estimates[1, ])
 mean(abs(estimates[1, ] < 0.15))
 ggplot(data.frame(x = estimates[1,], y = estimates[4,]), aes(x = x, y = y)) + 
