@@ -29,28 +29,39 @@ summary(estimates[1, constraint_sets[[4]]])
 summary(estimates[1, constraint_sets[[5]]])
 
 # load in inference results 
-pvals <- matrix(nrow = 45, ncol = 758)
-times <- matrix(nrow = 45, ncol = 758)
+pvals <- matrix(nrow = 47, ncol = 758)
+times <- matrix(nrow = 47, ncol = 758)
+# full radEmu score tests
 for (j in 1:758) {
   emuScore <- readRDS(paste0("results/score_test_results/full_score_res", j, ".rds"))
   pvals[1, j] <- emuScore$pval
   times[1, j] <- emuScore$time
 }
+# fastEmu score tests, various constraints
 for (i in 2:45) {
   emuScore <- readRDS(paste0("results/score_test_results/score_res", i, ".rds"))
   pvals[i, ] <- emuScore$pval
   times[i, ] <- emuScore$time
+}
+# radEmu with constraint 4
+for (j in 1:758) {
+  emuScore <- readRDS(paste0("results/score_test_results/s4_score_res", j, ".rds"))
+  pvals[46, j] <- emuScore$pval
+  times[46, j] <- emuScore$time
+}
+# radEmu with mean constraint
+for (j in 1:758) {
+  emuScore <- readRDS(paste0("results/score_test_results/mean_score_res", j, ".rds"))
+  pvals[47, j] <- emuScore$pval
+  times[47, j] <- emuScore$time
 }
 # analyze times
 rowMeans(times)
 apply(times, 1, max)/60
 rowSums(times)/3600
 # analyze significant results 
-qvals <- apply(pvals[1:45, ], 1, function(x) {qvalue(x)$qvalues})
-sig_cats <- lapply(1:45, function(x) {which(qvals[, x] <= 0.1)})
-sig_cats_comb <- unlist(sig_cats[2:45])
-sig_cats_unique <- unique(sig_cats_comb)
-sig_cats_unique %in% sig_cats[[1]]
+qvals <- apply(pvals[1:47, ], 1, function(x) {qvalue(x)$qvalues})
+sig_cats <- lapply(1:47, function(x) {which(qvals[, x] <= 0.1)})
 plot_df <- data.frame(p_med = pvals[1, ], p10 = pvals[2, ], p30 = pvals[3, ], 
                       p50 = pvals[4, ], p100 = pvals[5, ])
 plot(plot_df)
@@ -85,7 +96,7 @@ ggsave("figures/qval_med_p50.png", height = 6, width = 6)
 pval_mse <- apply(pvals, 1, function(x) {sum((x - pvals[1, ])^2)})
 qval_mse <- apply(qvals, 1, function(x) {sum((x - qvals[1, ])^2)})
 sizes <- c(10, 30, 50, 100)
-plot_df <- data.frame(p_mse = pval_mse[2:45], diff = abs(diffs), 
+plot_df <- data.frame(p_mse = pval_mse[2:45], diff = abs(diffs)[2:45], 
                       q_mse = qval_mse[2:45],
                       type = c(paste0("presence ", sizes),
                                rep(paste0("random ", sizes), each = 10)),
@@ -133,23 +144,16 @@ ggplot(plot_df, aes(x = num_disc_agree, y = num_disc_disagree, color = type, sha
 ggsave("figures/discoveries.png", height = 6, width = 6)
 
 # radEmu with constraint 4
-pvals_s4 <- rep(NA, 758)
-times_s4 <- rep(NA, 758)
-for (j in 1:758) {
-  emuScore <- readRDS(paste0("results/score_test_results/s4_score_res", j, ".rds"))
-  pvals_s4[j] <- emuScore$pval
-  times_s4[j] <- emuScore$time
-}
-median(times_s4)
+median(times[46, ])
 median(times[4, ])
-median(times_s4) / median(times[4, ])
-max(times_s4)
+median(times[46, ]) / median(times[4, ])
+max(times[46, ])
 max(times[4, ])
-max(times_s4) / max(times[4, ])
-sum(times_s4)
+max(times[46, ]) / max(times[4, ])
+sum(times[46, ])
 sum(times[4, ])
-sum(times_s4) / sum(times[4, ])
-cor(pvals[4, ], pvals_s4)
+sum(times[46, ]) / sum(times[4, ])
+cor(pvals[4, ], pvals[46, ])
 
 # data
 data("wirbel_sample")
