@@ -2,6 +2,7 @@ library(tidyverse)
 library(qvalue)
 library(ggpubr)
 library(radEmu)
+library(latex2exp)
 
 # data
 data("wirbel_sample")
@@ -45,22 +46,22 @@ plot_df <- data.frame(med = estimates[1, ], prev = estimates[4, ],
                       thin = dd_estimates[47, ])
 p1 <- ggplot(plot_df, aes(x = med, y = dd)) + geom_point() + 
   geom_abline(aes(slope = 1, intercept = 0), color = "red") + 
-  labs(x = "Estimate (full taxon reference set)", 
-       y = "Estimate\n(data-driven reference set)") + 
+  labs(x = TeX(r"(Estimates ($S_{all}$))"), 
+       y = TeX(r"(Estimates ($S_{dd}$))")) + 
   theme_bw(base_size = 14)
 p2 <- ggplot(plot_df, aes(x = med, y = ss)) + geom_point() + 
   geom_abline(aes(slope = 1, intercept = 0), color = "red") + 
-  labs(x = "Estimate (full taxon reference set)", 
-       y = "Estimate\n(sample splitting reference set)") + 
+  labs(x = TeX(r"(Estimates ($S_{all}$))"), 
+       y = TeX(r"(Estimates ($S_{ss}$))")) + 
   theme_bw(base_size = 14)
 p3 <- ggplot(plot_df, aes(x = med, y = thin)) + geom_point() + 
   geom_abline(aes(slope = 1, intercept = 0), color = "red") + 
-  labs(x = "Estimate (full taxon reference set)", 
-       y = "Estimate\n(thinning reference set)") + 
+  labs(x = TeX(r"(Estimates ($S_{all}$))"), 
+       y = TeX(r"(Estimates ($S_{th}$))")) + 
   theme_bw(base_size = 14)
 p <- ggarrange(p1, p2, p3, ncol = 1, nrow = 3)
-annotate_figure(p, top = text_grob("Comparing estimations across constraints over subsets of size 50", size = 16))
-ggsave("figures/compare_ests.pdf", height = 10, width = 10)
+annotate_figure(p, top = text_grob("Comparing estimates across reference sets of size 50", size = 16))
+ggsave("figures/compare_ests.pdf", height = 6, width = 6)
 
 # see how many NA's for each run 
 sapply(1:84, function(x) {sum(is.na(dd_estimates[x, ]))})[seq(1, 84, 4)]
@@ -117,22 +118,22 @@ plot_df <- data.frame(med = pvals[1, ], prev = pvals[4, ],
                       thin = pvals_dd[47, ])
 p2 <- ggplot(plot_df, aes(x = med, y = dd)) + geom_point() + 
   geom_abline(aes(slope = 1, intercept = 0), color = "red") + 
-  labs(x = "P-value (full taxon reference set)", 
-       y = "P-value\n(data-driven reference set)") +
+  labs(x = TeX(r"(P-values ($S_{all}$))"), 
+       y = TeX(r"(P-values ($S_{dd}$))")) +
   theme_bw(base_size = 14)
 p3 <- ggplot(plot_df, aes(x = med, y = ss)) + geom_point() + 
   geom_abline(aes(slope = 1, intercept = 0), color = "red") + 
-  labs(x = "P-value (full taxon reference set)", 
-       y = "P-value\n(sample splitting reference set)") +
+  labs(x = TeX(r"(P-values ($S_{all}$))"), 
+       y = TeX(r"(P-values ($S_{ss}$))")) +
   theme_bw(base_size = 14)
 p4 <- ggplot(plot_df, aes(x = med, y = thin)) + geom_point() + 
   geom_abline(aes(slope = 1, intercept = 0), color = "red") + 
-  labs(x = "P-value (full taxon reference set)", 
-       y = "P-value\n(thinning reference set)") +
+  labs(x = TeX(r"(P-values ($S_{all}$))"), 
+       y = TeX(r"(P-values ($S_{th}$))")) +
   theme_bw(base_size = 14)
 p <- ggarrange(p2, p3, p4, ncol = 1, nrow = 3)
-annotate_figure(p, top = text_grob("Comparing p-values across constraints over subsets of size 50", size = 16))
-ggsave("figures/compare_pvals.pdf", height = 10, width = 10)
+annotate_figure(p, top = text_grob("Comparing p-values across reference sets of size 50", size = 16))
+ggsave("figures/compare_pvals.pdf", height = 6, width = 6)
 
 plot_df <- data.frame(med = qvals[, 1], prev = qvals[, 4], 
                       dd = qvals_dd[, 3], ss = qvals_dd[, 27],
@@ -158,16 +159,16 @@ annotate_figure(p, top = "Comparing q-values across constraints over subsets of 
 ggsave("figures/compare_qvals.png", height = 6, width = 6)
 
 # overall comparison plots
-pval_mse <- c(apply(pvals[2:45, ], 1, function(x) {sum((x - pvals[1, ])^2)}), 
-              apply(pvals_dd, 1, function(x) {sum((x - pvals[1, ])^2, na.rm = T)}))
-qval_mse <- c(apply(qvals[, 2:45], 2, function(x) {sum((x - qvals[, 1])^2)}), 
-              apply(qvals_dd, 2, function(x) {sum((x - qvals[, 1])^2, na.rm = T)}))
-est_mse <- c(apply(estimates[2:45, ], 1, function(x) {sum((x - estimates[1, ])^2)}), 
-             apply(dd_estimates, 1, function(x) {sum((x - estimates[1, ])^2, na.rm = T)}))
+pval_mse <- c(apply(pvals[2:45, ], 1, function(x) {sqrt(mean((x - pvals[1, ])^2))}), 
+              apply(pvals_dd, 1, function(x) {sqrt(mean((x - pvals[1, ])^2, na.rm = T))}))
+#qval_mse <- c(apply(qvals[, 2:45], 2, function(x) {mean((x - qvals[, 1])^2)}), 
+#              apply(qvals_dd, 2, function(x) {mean((x - qvals[, 1])^2, na.rm = T)}))
+est_mse <- c(apply(estimates[2:45, ], 1, function(x) {sqrt(mean((x - estimates[1, ])^2))}), 
+             apply(dd_estimates, 1, function(x) {sqrt(mean((x - estimates[1, ])^2, na.rm = T))}))
 sizes <- c(10, 30, 50, 100)
 plot_df <- data.frame(est_mse = est_mse,
                       p_mse = pval_mse, 
-                      q_mse = qval_mse,
+                      #q_mse = qval_mse,
                       type = c(paste0("presence ", sizes),
                                rep(paste0("random ", sizes), each = 10),
                                paste0("data-driven ", sizes),
@@ -178,10 +179,10 @@ plot_df <- data.frame(est_mse = est_mse,
                                    rep("data-driven (thin)", 40)),
                       full_time = c(apply(times[2:45, ], 1, sum),
                                     apply(times_dd, 1, sum, na.rm = T)))
-plot_df$num_disc_agree <- c(sapply(2:45, function(x) {sum(sig_cats[[x]] %in% sig_cats[[1]])}),
-                            sapply(1:84, function(x) {sum(sig_cats_dd[[x]] %in% sig_cats[[1]])}))
-plot_df$num_disc_disagree <- c(sapply(2:45, function(x) {sum(!(sig_cats[[x]] %in% sig_cats[[1]]))}),
-                               sapply(1:84, function(x) {sum(!(sig_cats_dd[[x]] %in% sig_cats[[1]]))}))
+#plot_df$num_disc_agree <- c(sapply(2:45, function(x) {sum(sig_cats[[x]] %in% sig_cats[[1]])}),
+#                            sapply(1:84, function(x) {sum(sig_cats_dd[[x]] %in% sig_cats[[1]])}))
+#plot_df$num_disc_disagree <- c(sapply(2:45, function(x) {sum(!(sig_cats[[x]] %in% sig_cats[[1]]))}),
+#                               sapply(1:84, function(x) {sum(!(sig_cats_dd[[x]] %in% sig_cats[[1]]))}))
 plot_df$type <- factor(plot_df$type, levels = c(paste0("data-driven ", sizes),
                                                 paste0("data-driven (sample split) ", sizes),
                                                 paste0("data-driven (thin) ", sizes),
@@ -195,10 +196,14 @@ p1 <- ggplot(plot_df, aes(x = sqrt(est_mse), y = sqrt(p_mse), color = agg_type))
   #scale_shape_manual(values = c(17, 13, 12, 19, 8)) + 
   labs(x = "Root mean squared difference\nbetween estimates",
        y = "Root mean squared difference between p-values",
-       color = "Constraint",
-       shape = "Constraint Type") + 
+       color = "Reference set") + 
   theme_bw(base_size = 14) + 
-  guides(color = guide_legend(position = "bottom", nrow = 2))
+  ylim(c(0,0.6)) + 
+  guides(color = guide_legend(position = "bottom", nrow = 1)) + 
+  scale_color_hue(labels = c("data-driven" = TeX(r"($S_{dd}$)"),
+                             "data-driven (sample split)" = TeX(r"($S_{ss}$)"),
+                             "data-driven (thin)" = TeX(r"($S_{th}$)"),
+                             "random" = "random"))
 p1
 ggsave("figures/p_mse_by_est_mse.png", height = 6, width = 6)
 # p2 <- ggplot(plot_df, aes(x = sqrt(est_mse), y = sqrt(q_mse), color = agg_type)) + 
@@ -219,7 +224,11 @@ p3 <- ggplot(plot_df, aes(x = sqrt(est_mse), y = full_time/60, color = agg_type)
        color = "Constraint",
        shape = "Constraint Type") + 
   theme_bw(base_size = 14) + 
-  guides(color = guide_legend(position = "bottom", nrow = 2))
+  guides(color = guide_legend(position = "bottom", nrow = 2)) + 
+  scale_color_hue(labels = c("data-driven" = TeX(r"($S_{dd}$)"),
+                             "data-driven (sample split)" = TeX(r"($S_{ss}$)"),
+                             "data-driven (thin)" = TeX(r"($S_{th}$)"),
+                             "random" = "random"))
 p3
 ggsave("figures/full_time_by_est_mse.png", height = 6, width = 6)
 # p4 <- ggplot(plot_df, aes(x = num_disc_agree, y = num_disc_disagree, color = agg_type)) + 
@@ -235,7 +244,7 @@ ggsave("figures/full_time_by_est_mse.png", height = 6, width = 6)
 
 p <- ggarrange(p1, p3, nrow = 1, common.legend = T, legend = "bottom")
 annotate_figure(p, 
-                top = text_grob("Comparing constraints on subsets to\nconstraint on full taxon set",
+                top = text_grob("Comparing results using reference sets to full taxon set",
                                 size = 16))
 ggsave("figures/est_mse_p_mse_time.pdf", height = 8, width = 8)
 
