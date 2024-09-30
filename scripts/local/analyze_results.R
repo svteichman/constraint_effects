@@ -59,8 +59,9 @@ p3 <- ggplot(plot_df, aes(x = med, y = thin)) + geom_point() +
   labs(x = TeX(r"(Estimates ($S_{all}$))"), 
        y = TeX(r"(Estimates ($S_{th}$))")) + 
   theme_bw(base_size = 14)
-p <- ggarrange(p1, p2, p3, ncol = 1, nrow = 3)
-annotate_figure(p, top = text_grob("Comparing estimates across reference sets of size 50", size = 16))
+p_est <- ggarrange(p1, p2, p3, ncol = 1, nrow = 3)
+annotate_figure(p_est, top = text_grob("Comparing estimates across reference sets of size 50", size = 16))
+p_est
 ggsave("figures/compare_ests.pdf", height = 6, width = 6)
 
 # see how many NA's for each run 
@@ -131,9 +132,13 @@ p4 <- ggplot(plot_df, aes(x = med, y = thin)) + geom_point() +
   labs(x = TeX(r"(P-values ($S_{all}$))"), 
        y = TeX(r"(P-values ($S_{th}$))")) +
   theme_bw(base_size = 14)
-p <- ggarrange(p2, p3, p4, ncol = 1, nrow = 3)
-annotate_figure(p, top = text_grob("Comparing p-values across reference sets of size 50", size = 16))
+p_inf <- ggarrange(p2, p3, p4, ncol = 1, nrow = 3)
+annotate_figure(p_inf, top = text_grob("Comparing p-values across reference sets of size 50", size = 16))
 ggsave("figures/compare_pvals.pdf", height = 6, width = 6)
+p_all <- ggarrange(p_est, p_inf, nrow = 1)
+annotate_figure(p_all, top = text_grob("Comparing estimates and p-values across reference sets of size 50", size = 16))
+ggsave("figures/compare_ests_and_pvals.pdf", height = 8, width = 8)
+
 
 plot_df <- data.frame(med = qvals[, 1], prev = qvals[, 4], 
                       dd = qvals_dd[, 3], ss = qvals_dd[, 27],
